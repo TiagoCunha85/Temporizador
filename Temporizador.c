@@ -6,9 +6,10 @@
 #include "lwip/apps/mqtt.h"
 #include "lwip/netif.h"
 #include "lwip/init.h"
+#include "lwip/dns.h"  // Move para cima
 #include "lwip/tcp.h"
 #include "lwip/ip_addr.h"
-#include "lwip/dns.h"  // Include this header for dns_gethostbyname
+#include "lwip/err.h"
 #include "hardware/watchdog.h"
 
 // Configurações
@@ -98,6 +99,25 @@ static bool connect_wifi(void) {
     return false;
 }
 
+static bool connect_mqtt(const ip_addr_t *broker_ip) {
+    // Informações do cliente MQTT
+    struct mqtt_connect_client_info_t client_info = {
+        .client_id = "pico_timer",
+        .client_user = NULL,
+        .client_pass = NULL,
+        .keep_alive = 60
+    };
+
+    // Conectar ao servidor MQTT (ThingSpeak)
+    mqtt_client = mqtt_client_new();
+    if (mqtt_client == NULL) {
+        printf("Erro ao criar cliente MQTT\n");
+        return false;
+    }
+    mqtt_client_connect(mqtt_client, broker_ip, MY_MQTT_PORT, mqtt_connection_cb, NULL, &client_info);
+    return true;
+}
+
 int main() {
     stdio_init_all();
     gpio_init(LED_PIN);
@@ -126,37 +146,6 @@ int main() {
         }
     } else if (err != ERR_OK) {
         printf("Erro ao resolver o endereço do broker MQTT\n");
-        return 1;
-    }
-
-    // Informações do cliente MQTT
-    struct mqtt_connect_client_info_t client_info = {
-        .client_id = "pico_timer",
-        .client_user = NULL,
-        .client_pass = NULL,
-        .keep_alive = 60
-    };
-
-    // Conectar ao servidor MQTT (ThingSpeak)
-    mqtt_client = mqtt_client_new();
-    if (mqtt_client == NULL) {
-        printf("Erro ao criar cliente MQTT\n");
-        return 1;
-    }
-    mqtt_client_connect(mqtt_client, &mqtt_broker_ip, MY_MQTT_PORT, mqtt_connection_cb, NULL, &client_info);
-
-    printf("Temporizador iniciado: %d segundos\n", TEMPO_TOTAL);
-    
-    for (int i = TEMPO_TOTAL; i > 0; i--) {
-        printf("Tempo restante: %d segundos\n", i);
-        publish_message(i);  // Envia para o ThingSpeak
-        while (mqtt_broker_ip.addr == IPADDR_ANY) {
-            reset_watchdog();
-            cyw43_arch_poll();
-            sleep_ms(100);
-        }
-    } else if (err != ERR_OK) {
-        printf("Falha na resolução DNS do broker MQTT\n");
         return 1;
     }
 

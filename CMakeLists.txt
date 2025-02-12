@@ -54,18 +54,19 @@ target_include_directories(Temporizador PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${PICO_SDK_PATH}/external/pico_cyw43_driver
     ${PICO_SDK_PATH}/lib/lwip/src/include
-    ${PICO_SDK_PATH}/lib/lwip/contrib/ports/unix/port/include
+    ${PICO_SDK_PATH}/lib/lwip/contrib/ports/embedded/include
 )
 
 # Bibliotecas necessárias
 target_link_libraries(Temporizador
-    pico_stdlib                                  # Biblioteca padrão do Pico
-    pico_cyw43_arch_lwip_threadsafe_background  # Suporte WiFi
-    hardware_timer                              # Suporte a timers
-    hardware_clocks                             # Suporte a clocks
-    hardware_watchdog                           # Suporte ao watchdog
-    pico_lwip                                   # Suporte à rede
-    pico_lwip_mqtt                             # Suporte MQTT
+pico_stdlib
+pico_cyw43_arch_lwip_threadsafe_background
+pico_lwip  # Principal biblioteca lwIP
+pico_lwip_nosys
+pico_lwip_mqtt
+hardware_timer
+hardware_clocks
+hardware_watchdog
 )
 
 # Configurações de compilação condicional
