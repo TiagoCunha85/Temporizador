@@ -1,14 +1,3 @@
-# Generated Cmake Pico project file
-
-cmake_minimum_required(VERSION 3.13)
-
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Initialise pico_sdk from installed location
-# (note this can come from environment, CMake cache etc)
-
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
@@ -23,59 +12,73 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
+cmake_minimum_required(VERSION 3.13)
+
+# Configurações do projeto
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Configurações de build
+set(CMAKE_BUILD_TYPE Debug)
+add_compile_definitions(DEBUG=1)
+
+# Configurações de otimização
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+
+# Configuração do Pico W
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 
-# Pull in Raspberry Pi Pico SDK (must be before project)
+# Importação do SDK
 include(pico_sdk_import.cmake)
 
+# Definição do projeto
 project(Temporizador C CXX ASM)
 
-# Initialise the Raspberry Pi Pico SDK
+# Inicialização do SDK
 pico_sdk_init()
 
-# Add executable. Default name is the project name, version 0.1
+# Definição dos arquivos fonte
 add_executable(Temporizador Temporizador.c)
 
-# Set the name and version of the program
+# Configurações do programa
 pico_set_program_name(Temporizador "Temporizador")
 pico_set_program_version(Temporizador "0.1")
 
-# Modify the below lines to enable/disable output over UART/USB
+# Configuração das saídas
 pico_enable_stdio_uart(Temporizador 1)
 pico_enable_stdio_usb(Temporizador 1)
 
-# Add the standard library to the build
-target_link_libraries(Temporizador
-        pico_stdlib
-)
-
-# Add the standard include files to the build
+# Diretórios de inclusão
 target_include_directories(Temporizador PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
-        ${PICO_SDK_PATH}/external/pico_cyw43_driver
-        ${PICO_SDK_PATH}/lib/lwip/src/include
-        ${PICO_SDK_PATH}/lib/lwip/src/include/ipv4
-        ${PICO_SDK_PATH}/lib/lwip/src/include/ipv6
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${PICO_SDK_PATH}/external/pico_cyw43_driver
+    ${PICO_SDK_PATH}/lib/lwip/src/include
+    ${PICO_SDK_PATH}/lib/lwip/contrib/ports/unix/port/include
 )
 
-# Adicionar diretórios de bibliotecas
-target_link_directories(Temporizador PRIVATE
-        ${PICO_SDK_PATH}/lib/lwip/src
-)
-
-# Adicionando dependências do Wi-Fi e do lwIP
+# Bibliotecas necessárias
 target_link_libraries(Temporizador
-        pico_cyw43_arch_lwip_threadsafe_background  # Adicionado para o Wi-Fi
-        lwip  # Adicionado para o lwIP
+    pico_stdlib                                  # Biblioteca padrão do Pico
+    pico_cyw43_arch_lwip_threadsafe_background  # Suporte WiFi
+    hardware_timer                              # Suporte a timers
+    hardware_clocks                             # Suporte a clocks
+    hardware_watchdog                           # Suporte ao watchdog
+    pico_lwip                                   # Suporte à rede
+    pico_lwip_mqtt                             # Suporte MQTT
 )
 
-# Adicionar bibliotecas de hardware necessárias
-target_link_libraries(Temporizador 
-        hardware_timer
-        hardware_clocks
-        pico_cyw43_arch_lwip_threadsafe_background  # Adicionado para o Wi-Fi
-        lwip  # Adicionado para o lwIP
-)
+# Configurações de compilação condicional
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(Temporizador PRIVATE
+        DEBUG=1
+        PICO_DEBUG=1
+    )
+endif()
 
-# Gerar os arquivos extras para o projeto
+# Geração dos arquivos extras
 pico_add_extra_outputs(Temporizador)
+
+# Configurações de memória
+pico_set_binary_type(Temporizador copy_to_ram)
+pico_set_boot_stage2(Temporizador boot2_generic_03h)
