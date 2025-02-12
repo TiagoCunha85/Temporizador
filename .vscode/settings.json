@@ -13,7 +13,7 @@
     },
     "cmake.configureOnEdit": false,
     "cmake.automaticReconfigure": false,
-    "cmake.configureOnOpen": false,
+    "cmake.configureOnOpen": true,
     "cmake.generator": "Ninja",
     "cmake.cmakePath": "${userHome}/.pico-sdk/cmake/v3.29.9/bin/cmake",
     "C_Cpp.debugShortcut": false,
